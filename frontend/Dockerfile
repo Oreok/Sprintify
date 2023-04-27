@@ -1,0 +1,19 @@
+FROM node:latest
+
+WORKDIR /app
+
+COPY package.json ./
+COPY package-lock.json ./
+COPY . .
+
+RUN npm install -g npm@9.1.1
+RUN npm install
+RUN npm install react-scripts@5.0.1 -g --silent
+
+ARG BACKEND
+ENV REACT_APP_BACKEND_URI $BACKEND
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+

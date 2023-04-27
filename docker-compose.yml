@@ -1,0 +1,58 @@
+version: "3.7"
+
+services:
+  wip-23-g2-dev-mongodb:
+    image: mongo:latest
+    container_name: wip-23-g2-dev-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - "MONGO_INITDB_ROOT_PASSWORD=${dbPASSWORD}"
+    restart: always
+    ports:
+      - "${DATABASE_PORT}:27017"
+    volumes:
+      - ./database/db:/data/db
+      - ./database/dev.archive:/Databases/dev.archive
+      - ./database/production:/Databases/production
+
+  wip-23-g2-dev-backend:
+    container_name: wip-23-g2-dev-backend
+    environment:
+      - "JWT_TOKEN=${JWT_TOKEN}"
+      - "URL=${devBackendURL}"
+      - "beActiveOnRegister=${beActiveOnRegister}"
+      - "emailRegex=${emailRegex}"
+      - "frontendURL=${devFrontendURL}"
+      - "backendURL=${devBackendURL}"
+      - "MONGODB_URI=${MONGODB_URI}"
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "${BACKEND_PORT}:4000"
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      - wip-23-g2-dev-mongodb
+
+  wip-23-g2-dev-frontend:
+    container_name: wip-23-g2-dev-frontend
+    environment:
+      - "REACT_APP_frontendURL=${devFrontendURL}"
+      - "REACT_APP_backendURL=${devBackendURL}"
+
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+      args:
+        - BACKEND=${BACKEND_PROTOCOL}://${BACKEND_HOST}:${BACKEND_PORT}/
+    restart: always
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      - wip-23-g2-dev-mongodb
+      - wip-23-g2-dev-backend
